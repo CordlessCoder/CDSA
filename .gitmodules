@@ -1,0 +1,3 @@
+[submodule "src/memory"]
+	path = src/memory
+	url = https://github.com/CordlessCoder/Cmem
