@@ -1,10 +1,11 @@
+// ReSharper disable once CppMissingIncludeGuard
 #ifndef T
 #error you need to define T before including this header
 #else
 
 #ifndef CAT
-#define _CAT(A, B) A##_##B
-#define CAT(A, B) _CAT(A, B)
+#define CAT_(A, B) A##_##B
+#define CAT(A, B) CAT_(A, B)
 #endif
 
 #include <stdbool.h>
@@ -15,17 +16,19 @@
 
 typedef struct NODE NODE;
 
-struct NODE {
+struct NODE
+{
     T value;
-    NODE *next;
+    NODE* next;
 };
 
 
 typedef struct LIST LIST;
 
-struct LIST {
-    NODE *head;
-    NODE *tail;
+struct LIST
+{
+    NODE* head;
+    NODE* tail;
 };
 
 #define node_new CAT(node_new, T)
@@ -35,24 +38,28 @@ struct LIST {
 #define list_pop_front CAT(list_pop_front, T)
 #define list_make_empty CAT(list_make_empty, T)
 
-NODE *node_new(T value) {
-    NODE *ptr = malloc(sizeof(NODE));
+static NODE*node_new(const T value)
+{
+    NODE* ptr = malloc(sizeof(NODE));
     ptr->value = value;
     ptr->next = NULL;
     return ptr;
 }
 
-LIST list_new(void) {
-    LIST list = {
+static LIST list_new(void)
+{
+    const LIST list = {
         .head = NULL,
         .tail = NULL,
     };
     return list;
 }
 
-void list_push_back(LIST *self, T value) {
-    NODE *node = node_new(value);
-    if (self->head == NULL) {
+static void list_push_back(LIST* self, const T value)
+{
+    NODE* node = node_new(value);
+    if (self->head == NULL)
+    {
         self->head = node;
         self->tail = node;
         return;
@@ -61,9 +68,11 @@ void list_push_back(LIST *self, T value) {
     self->tail = node;
 }
 
-void list_push_front(LIST *self, T value) {
-    NODE *node = node_new(value);
-    if (self->head == NULL) {
+static void list_push_front(LIST* self, T value)
+{
+    NODE* node = node_new(value);
+    if (self->head == NULL)
+    {
         self->head = node;
         self->tail = node;
         return;
@@ -72,25 +81,30 @@ void list_push_front(LIST *self, T value) {
     self->head = node;
 }
 
-int list_pop_front(LIST *self, bool *was_empty) {
+static int list_pop_front(LIST* self, bool* was_empty)
+{
     *was_empty = false;
-    if (self->head == NULL) {
+    if (self->head == NULL)
+    {
         *was_empty = true;
         return 0;
     }
-    NODE *old_head = self->head;
+    NODE* old_head = self->head;
     self->head = old_head->next;
-    if (self->head == NULL) {
+    if (self->head == NULL)
+    {
         self->tail = NULL;
     }
-    int value = old_head->value;
+    const int value = old_head->value;
     free(old_head);
     return value;
 }
 
-void list_make_empty(LIST *list) {
+static void list_make_empty(LIST* list)
+{
     bool is_empty = false;
-    while (!is_empty) {
+    while (!is_empty)
+    {
         list_pop_front(list, &is_empty);
     }
 }

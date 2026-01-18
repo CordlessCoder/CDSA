@@ -1,0 +1,4 @@
+cmake-build*
+main
+a.out
+.idea
