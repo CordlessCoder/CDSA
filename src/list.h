@@ -8,6 +8,7 @@
 #define CAT(A, B) CAT_(A, B)
 #endif
 
+#include "memory/allocator.h"
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -16,8 +17,7 @@
 
 typedef struct NODE NODE;
 
-struct NODE
-{
+struct NODE {
     T value;
     NODE* next;
 };
@@ -25,10 +25,10 @@ struct NODE
 
 typedef struct LIST LIST;
 
-struct LIST
-{
+struct LIST {
     NODE* head;
     NODE* tail;
+    AllocatorInstance allocator;
 };
 
 #define node_new CAT(node_new, T)
@@ -38,28 +38,25 @@ struct LIST
 #define list_pop_front CAT(list_pop_front, T)
 #define list_make_empty CAT(list_make_empty, T)
 
-static NODE*node_new(const T value)
-{
-    NODE* ptr = malloc(sizeof(NODE));
+static NODE* node_new(AllocatorInstance allocator, const T value) {
+    NODE* ptr = Allocator_alloc(allocator, TypeLayout_for_type(NODE));
     ptr->value = value;
     ptr->next = NULL;
     return ptr;
 }
 
-static LIST list_new(void)
-{
+static LIST list_new(AllocatorInstance allocator) {
     const LIST list = {
         .head = NULL,
         .tail = NULL,
+        .allocator = allocator,
     };
     return list;
 }
 
-static void list_push_back(LIST* self, const T value)
-{
-    NODE* node = node_new(value);
-    if (self->head == NULL)
-    {
+static void list_push_back(LIST* self, const T value) {
+    NODE* node = node_new(self->allocator, value);
+    if (self->head == NULL) {
         self->head = node;
         self->tail = node;
         return;
@@ -68,11 +65,9 @@ static void list_push_back(LIST* self, const T value)
     self->tail = node;
 }
 
-static void list_push_front(LIST* self, T value)
-{
-    NODE* node = node_new(value);
-    if (self->head == NULL)
-    {
+static void list_push_front(LIST* self, T value) {
+    NODE* node = node_new(self->allocator, value);
+    if (self->head == NULL) {
         self->head = node;
         self->tail = node;
         return;
@@ -81,31 +76,23 @@ static void list_push_front(LIST* self, T value)
     self->head = node;
 }
 
-static int list_pop_front(LIST* self, bool* was_empty)
-{
-    *was_empty = false;
-    if (self->head == NULL)
-    {
-        *was_empty = true;
-        return 0;
+static bool list_pop_front(LIST* self, T* const out) {
+    if (self->head == NULL) {
+        return false;
     }
     NODE* old_head = self->head;
     self->head = old_head->next;
-    if (self->head == NULL)
-    {
+    if (self->head == NULL) {
         self->tail = NULL;
     }
-    const int value = old_head->value;
-    free(old_head);
-    return value;
+    *out = old_head->value;
+    Allocator_free(self->allocator, TypeLayout_for_type(NODE), old_head);
+    return true;
 }
 
-static void list_make_empty(LIST* list)
-{
-    bool is_empty = false;
-    while (!is_empty)
-    {
-        list_pop_front(list, &is_empty);
+static void list_make_empty(LIST* list) {
+    T sink;
+    while (list_pop_front(list, &sink)) {
     }
 }
 #undef LIST
